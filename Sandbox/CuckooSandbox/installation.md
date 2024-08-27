@@ -1,39 +1,35 @@
 As stated by the cuckoosandbox site, it is preferable to have a host (to run the software in) that is using GNU/Linux and has the python package installer (pip) installed (and python).
-
+In this example we will use an ubuntu 16.04 LTS machine for our host with virtualbox as our virtualisation.
 ## Requirements
 As stated for the requirements, python is necessary as well as python libraries, to install it, use your distro's package manager to install python and the required libraries.
-The following packages are required : 
-- python
-- python-pip
-- python-dev
-- libffi-dev
-- libssl-dev
-- python-virtualenv
-- python-setuptools
-- libjpeg-dev
-- zlib1g-dev
-- swig
-
-To have a web-based interface mongodb is required (install it with your package manager).
-
-To use PgSQL for the database (which is recommended) install postgresql and libpq-dev (using your package manager).
-
-For virtualisation purposes, install kvm and the required kvm libraries
-- qemu-kvm
-- libvirt-bin
-- bridge-utils
-- python-libvirt
-
-Other required packages are
-- tcpdump : for security reasons, cuckoo has to have some privileges to run tcpdump, therefore the following is required
 ```bash
-sudo groupadd pcap
-sudo usermod -a -G pcap cuckoo
-sudo chgrp pcap /usr/sbin/tcpdump
-sudo setcap cap_net_raw,cap_net_admin=eip /usr/sbin/tcpdump
+$ sudo apt-get install python python-pip python-dev libffi-dev libssl-dev
+$ sudo apt-get install python-virtualenv python-setuptools
+$ sudo apt-get install libjpeg-dev zlib1g-dev swig
+# install mongodb for the web gui
+sudo apt-get install mongodb
+# install postgresql for cuckoo (separate from mongodb that is specific to the web gui)
+sudo apt-get install postgresql libpq-dev
+# install virtualbox
+$ echo deb http://download.virtualbox.org/virtualbox/debian xenial contrib | sudo tee -a /etc/apt/sources.list.d/virtualbox.list
+$ wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
+$ sudo apt-get update
+$ sudo apt-get install virtualbox-5.2
+# install tcpdump
+$ sudo apt-get install tcpdump apparmor-utils
+sudo apt-get install libcap2-bin
+$ sudo aa-disable /usr/sbin/tcpdump
+# modify privileges for the cuckoo user to be able to use tcpdump*
+$ sudo groupadd pcap
+$ sudo usermod -a -G pcap cuckoo
+$ sudo chgrp pcap /usr/sbin/tcpdump
+$ sudo setcap cap_net_raw,cap_net_admin=eip /usr/sbin/tcpdump
+# install m2crypto
+sudo apt-get install swig
+sudo pip install m3crypto==0.24.0
+# install guacd
+sudo apt install libguac-client-rdp0 libguac-client-vnc0 libguac-client-ssh0 guacd
 ```
-- m2crypto (requires swig to be installed prior to this package)
-- gguacd (packages are libguac-client-rdp0 libguac-client-vnc0 libguac-client-ssh0 guacd)
 
 ## Installation
 First it is required to create a user for cuckoo
@@ -50,8 +46,9 @@ sudo pip install -U cuckoo
 
 It is highly recommended to use virtualenv to avoid messing around with python packages in the system.
 ```bash
-virtualenv venv
-./venv/bin/activate
+sudo apt-get -y install virtualenv
+virtualenv cuckoo-test
+./cuckoo-test/bin/activate
 pip install -U pip setuptools
 pip install -U cuckoo
 ```
