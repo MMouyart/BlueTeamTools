@@ -3,27 +3,27 @@ In this example we will use an ubuntu 16.04 LTS machine for our host with virtua
 ## Requirements
 As stated for the requirements, python is necessary as well as python libraries, to install it, use your distro's package manager to install python and the required libraries.
 ```bash
-$ sudo apt-get install python python-pip python-dev libffi-dev libssl-dev
-$ sudo apt-get install python-virtualenv python-setuptools
-$ sudo apt-get install libjpeg-dev zlib1g-dev swig
+sudo apt-get install python python-pip python-dev libffi-dev libssl-dev
+sudo apt-get install python-virtualenv python-setuptools
+sudo apt-get install libjpeg-dev zlib1g-dev swig
 # install mongodb for the web gui
 sudo apt-get install mongodb
 # install postgresql for cuckoo (separate from mongodb that is specific to the web gui)
 sudo apt-get install postgresql libpq-dev
 # install virtualbox
-$ echo deb http://download.virtualbox.org/virtualbox/debian xenial contrib | sudo tee -a /etc/apt/sources.list.d/virtualbox.list
-$ wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
-$ sudo apt-get update
-$ sudo apt-get install virtualbox-5.2
+echo deb http://download.virtualbox.org/virtualbox/debian xenial contrib | sudo tee -a /etc/apt/sources.list.d/virtualbox.list
+wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install virtualbox-5.2
 # install tcpdump
-$ sudo apt-get install tcpdump apparmor-utils
+sudo apt-get install tcpdump apparmor-utils
 sudo apt-get install libcap2-bin
-$ sudo aa-disable /usr/sbin/tcpdump
+sudo aa-disable /usr/sbin/tcpdump
 # modify privileges for the cuckoo user to be able to use tcpdump*
-$ sudo groupadd pcap
-$ sudo usermod -a -G pcap cuckoo
-$ sudo chgrp pcap /usr/sbin/tcpdump
-$ sudo setcap cap_net_raw,cap_net_admin=eip /usr/sbin/tcpdump
+sudo groupadd pcap
+sudo usermod -a -G pcap cuckoo
+sudo chgrp pcap /usr/sbin/tcpdump
+sudo setcap cap_net_raw,cap_net_admin=eip /usr/sbin/tcpdump
 # install m2crypto
 sudo apt-get install swig
 sudo pip install m3crypto==0.24.0
