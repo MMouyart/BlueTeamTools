@@ -81,3 +81,15 @@ If you wish to use per-analysis routing (i.e. route each analysis vm to a specif
 ## Guest installation and configuration
 Once cuckoo has been installed on your machine, it is required to create guests (vms) that will run the analysis. Depending on the kind of sample you wish to analyse, the guest can be a windows box or a gnu/linux distro. For gnu/linux distros, the process is the same as the installation for the host machine.
 
+We will go for a windows box.
+
+Once the iso file for the windows box has been installed, create a vm that has sufficient resources.
+
+Install vmcloack to automate guest configuration ```pip install -U mvcloak```.
+
+Remove any virtual net that has been created for your guest (created by the virtualisation software) and create another one for your guest using mvcloak ```vmcloak-<vnet name>```.
+
+Create the vm with vmcloak ```vmcloak init --verbose --<os type> <vm name> --cpus <number of cores> --ramsize <number of ram>```
+And clone the vm to always keep a nice and clean base vm ```vmcloak clone <base vm> <new clone vm>```
+
+After that you can install any additionnal packages for your vm ```vmcloak install <vm name> <package name>``` (the packages can be listed using ```vmcloak list deps```).
