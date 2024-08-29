@@ -1,5 +1,5 @@
 Cape is a newer self-hosted sandbox solution based on cuckoo.
-As stated by the documentation, the recommendation for host and guest are Ubuntu for host and windows 7 for guest.
+As stated by the documentation, the recommendation for host and guest are Ubuntu 22.04 for host and windows 7 for guest.
 For ease of use, clone the Cape github repo (https://github.com/kevoreilly/CAPEv2.git), therefore, every mentionned script will be available on your system.
 
 ## Installing all dependencies
