@@ -33,6 +33,24 @@ sudo pip install m3crypto==0.24.0
 sudo apt install libguac-client-rdp0 libguac-client-vnc0 libguac-client-ssh0 guacd
 ```
 
+You may encounter file openning limits related errors (the system does not allow cuckoo to open the amount of files it wants), to fix it some modifications are required.
+```bash
+# edit /etc/security/limits.conf and add at the end 
+*         hard     nofile   500000
+*         soft     nofile   500000
+root      hard     nofile   500000
+root      soft     nofile   500000
+# edit /etc/pam.d/common-session and add at the end
+session required pam_limits.so
+# edit /etc/sysctl.conf and add at the end
+fs.file-max = 2097152
+# verify limits
+sudo sysctl -p
+cat /proc/sys/fs/file-max 
+ulimit -Hn 
+ulimit -Sn 
+```
+
 ## Installation
 First it is required to create a user for cuckoo
 ```bash
