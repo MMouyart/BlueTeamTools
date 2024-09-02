@@ -44,6 +44,11 @@ root      soft     nofile   500000
 session required pam_limits.so
 # edit /etc/sysctl.conf and add at the end
 fs.file-max = 2097152
+# edit /etc/systemd/system.conf and modify the line DefaultLimitNOFILE=
+DefaultLimitNOFILE=500000
+# edit /etc/systemd/user.conf and modify the line DefaultLimitNOFILE=
+DefaultLimitNOFILE=500000
+# reboot
 # verify limits
 sudo sysctl -p
 cat /proc/sys/fs/file-max 
