@@ -119,3 +119,51 @@ Cuckoo has various configuration files which we will go through.
 Last one is reporting.conf which defines how the reports should be generated.
 
 If you wish to use per-analysis routing (i.e. route each analysis vm to a specific network point) use the cuckoo router utility. To run the router as user that is not cuckoo ```cuckoo router -g <user>```, to use it with virtualenv ```sudo ~/venv/bin/cuckoo router```. If your are running a linux distro, you should configure iproute2 to register each network interface.
+
+
+## Troubleshoot
+If you encounter an error when starting cuckoo that looks like that :
+Traceback (most recent call last):
+File "/usr/local/lib/python2.7/dist-packages/cuckoo/main.py", line 297, in main
+cuckoo_init(level, ctx)
+File "/usr/local/lib/python2.7/dist-packages/cuckoo/main.py", line 170, in cuckoo_init
+check_version(ctx.ignore_vuln)
+File "/usr/local/lib/python2.7/dist-packages/cuckoo/core/startup.py", line 113, in check_version
+params={"version": version}, timeout=6
+File "/usr/local/lib/python2.7/dist-packages/requests/api.py", line 70, in get
+return request('get', url, params=params, **kwargs)
+File "/usr/local/lib/python2.7/dist-packages/requests/api.py", line 56, in request
+return session.request(method=method, url=url, **kwargs)
+File "/usr/local/lib/python2.7/dist-packages/requests/sessions.py", line 488, in request
+resp = self.send(prep, **send_kwargs)
+File "/usr/local/lib/python2.7/dist-packages/requests/sessions.py", line 609, in send
+r = adapter.send(request, **kwargs)
+File "/usr/local/lib/python2.7/dist-packages/requests/adapters.py", line 423, in send
+timeout=timeout
+File "/usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/connectionpool.py", line 600, in urlopen
+chunked=chunked)
+File "/usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/connectionpool.py", line 356, in _make_request
+conn.request(method, url, **httplib_request_kw)
+File "/usr/lib/python2.7/httplib.py", line 1099, in request
+self._send_request(method, url, body, headers)
+File "/usr/lib/python2.7/httplib.py", line 1139, in _send_request
+self.endheaders(body)
+File "/usr/lib/python2.7/httplib.py", line 1095, in endheaders
+self._send_output(message_body)
+File "/usr/lib/python2.7/httplib.py", line 898, in _send_output
+self.send(msg)
+File "/usr/lib/python2.7/httplib.py", line 874, in send
+self.sock.sendall(data)
+File "/usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/contrib/pyopenssl.py", line 311, in sendall
+sent = self._send_until_done(data[total_sent:total_sent + SSL_WRITE_BLOCKSIZE])
+File "/usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/contrib/pyopenssl.py", line 301, in _send_until_done
+return self.connection.send(data)
+File "/usr/local/lib/python2.7/dist-packages/OpenSSL/SSL.py", line 1644, in send
+with _from_buffer(buf) as data:
+AttributeError: exit
+
+To fix it do 
+```bash
+pip -U install urllib3
+pip -U install pyopenssl
+```
