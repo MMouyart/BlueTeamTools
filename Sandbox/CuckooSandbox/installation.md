@@ -1,5 +1,7 @@
 As stated by the cuckoosandbox site, it is preferable to have a host (to run the software in) that is using GNU/Linux and has the python package installer (pip) installed (and python).
 In this example we will use an ubuntu 16.04 LTS machine for our host with virtualbox as our virtualisation.
+In this tutorial, we will be using a user called cuckoo to run the cuckoo sandbox app, therefore, if you wish not to create this cuckoo user and run cuckoo with your default user, make sure to do all related groups configuration and working directory properly.
+
 ## Requirements
 As stated for the requirements, python is necessary as well as python libraries, to install it, use your distro's package manager to install python and the required libraries.
 ```bash
@@ -38,25 +40,45 @@ sudo adduser cuckoo
 sudo usermod -a -G libvirtd cuckoo
 ```
 
-We can install cuckoo using pip (this installs directly onto the system without virtualenv, and is therefore not recommended)
-```bash
-sudo pip installl -U pip setuptools
-sudo pip install -U cuckoo
-```
-
-It is highly recommended to use virtualenv to avoid messing around with python packages in the system.
+Install virtualenv and use it to install cuckoo and vmcloak.
 ```bash
 sudo apt-get -y install virtualenv
 virtualenv cuckoo-test
-./cuckoo-test/bin/activate
+. cuckoo-test/bin/activate
 pip install -U pip setuptools
-pip install -U cuckoo
+pip install -U cuckoo vmcloak
 ```
 
-By default when running cuckoo, a working directory will be created in the home directory, therefore all cuckoo related files will be found under /home/cuckoo.
+## Guest installation and configuration
+Once cuckoo has been installed on your machine, it is required to create guests (vms) that will run the analysis. Depending on the kind of sample you wish to analyse, the guest can be a windows box or a gnu/linux distro. For gnu/linux distros, the process is the same as the installation for the host machine.
+
+We will go for a windows box.
+
+Once the iso file for the windows box has been installed, mount the file to then create a vm that has sufficient resources.
+```bash
+mkdir /mnt/win7
+sudo mount -o ro,loop <win7>.iso /mnt/win7
+```
+Install vmcloack to automate guest configuration 
+```bash
+. <cuckoo virtual env location>/<venv name>/bin/activate
+pip install -U mvcloak```.
+
+Remove any virtual net that has been created for your guest (created by the virtualisation software) and create another one for your guest using mvcloak ```vmcloak-<vnet name>```.
+
+Create the vm with vmcloak ```vmcloak init --verbose --<os type> <vm name> --cpus <number of cores> --ramsize <number of ram>```
+And clone the vm to always keep a nice and clean base vm ```vmcloak clone <base vm> <new clone vm>```
+```bash
+vmcloak init --verbose --win7x64 win7x64base --cpus 2 --ramsize 2048
+vmcloak clone win7x64base win7x64cuckoo
+## open virtualbox and proceed to install windows 7, afterwards vmcloak will be automatically configuring registry, services...
+```
+
+After that you can install any additionnal packages for your vm ```vmcloak install <vm name> <package name>``` (the packages can be listed using ```vmcloak list deps```).
+E.g. ```vmcloak install win7x64cuckoo adobepdf pillow dotnet java flash vcredist vcredist.version=2015u3 wallpaper```.
 
 ## Configuring
-Cuckoo has various file which we will go through.
+Cuckoo has various configuration files which we will go through.
 
 1st one is cuckoo.conf, all of the following options are the most important ones : 
 - machinery in the [Cuckoo] section which defines which virtualisation software to use with cuckoo (is equal to the module like virtualbox, vmware, kvm).
@@ -74,19 +96,3 @@ Cuckoo has various file which we will go through.
 Last one is reporting.conf which defines how the reports should be generated.
 
 If you wish to use per-analysis routing (i.e. route each analysis vm to a specific network point) use the cuckoo router utility. To run the router as user that is not cuckoo ```cuckoo router -g <user>```, to use it with virtualenv ```sudo ~/venv/bin/cuckoo router```. If your are running a linux distro, you should configure iproute2 to register each network interface.
-
-## Guest installation and configuration
-Once cuckoo has been installed on your machine, it is required to create guests (vms) that will run the analysis. Depending on the kind of sample you wish to analyse, the guest can be a windows box or a gnu/linux distro. For gnu/linux distros, the process is the same as the installation for the host machine.
-
-We will go for a windows box.
-
-Once the iso file for the windows box has been installed, create a vm that has sufficient resources.
-
-Install vmcloack to automate guest configuration ```pip install -U mvcloak```.
-
-Remove any virtual net that has been created for your guest (created by the virtualisation software) and create another one for your guest using mvcloak ```vmcloak-<vnet name>```.
-
-Create the vm with vmcloak ```vmcloak init --verbose --<os type> <vm name> --cpus <number of cores> --ramsize <number of ram>```
-And clone the vm to always keep a nice and clean base vm ```vmcloak clone <base vm> <new clone vm>```
-
-After that you can install any additionnal packages for your vm ```vmcloak install <vm name> <package name>``` (the packages can be listed using ```vmcloak list deps```).
