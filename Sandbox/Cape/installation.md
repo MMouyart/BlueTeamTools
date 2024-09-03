@@ -1,12 +1,12 @@
 Cape is a newer self-hosted sandbox solution based on cuckoo.
-As stated by the documentation, the recommendation for host and guest are Ubuntu 22.04 for host and windows 7 for guest.
-For ease of use, clone the Cape github repo (https://github.com/kevoreilly/CAPEv2.git), therefore, every mentionned script will be available on your system.
+As stated by the documentation, the recommendation for host and guest are Ubuntu 22.04 for host and windows 10 21H2 for guest.
+For ease of use, clone the Cape github repo ```git clone https://github.com/kevoreilly/CAPEv2.git```, therefore, every mentionned script will be available on your system.
 
 ## Installing all dependencies
 First dependencie to install is KVM. The documentation links to a script which automates the installation process.
 Link to the script : https://github.com/kevoreilly/CAPEv2/blob/master/installer/kvm-qemu.sh#L37
 
-In the script, every <WOOT> occurence should be replaced by real haardware pattern which can be found using the command acpidump.
+In the script, every <WOOT> occurence should be replaced by real hardware pattern which can be found using the command acpidump. Alternatively you can replace all occurences with random characters.
 ```bash
 sudo chmod a+x kvm-qemu.sh
 sudo ./kvm-qemu.sh all | tee kvm-qemu.log
@@ -189,4 +189,5 @@ APT::Periodic::Unattended-Upgrade "0";
 EOF
 
 sudo systemctl stop snapd.service && sudo systemctl mask snapd.service
+```
 
