@@ -8,15 +8,22 @@ Link to the script : https://github.com/kevoreilly/CAPEv2/blob/master/installer/
 
 In the script, every <WOOT> occurence should be replaced by real hardware pattern which can be found using the command acpidump. Alternatively you can replace all occurences with random characters.
 ```bash
-sudo chmod a+x kvm-qemu.sh
-sudo ./kvm-qemu.sh all | tee kvm-qemu.log
+cd CAPEv2
+sudo chmod a+x installer/kvm-qemu.sh
+sudo ./installer/kvm-qemu.sh all | tee kvm-qemu.log
+# if you face an error about needrestart, install the package
+sudo apt-get install needrestart
 ```
 If any error happens when trying to launch KVM or any of its related components, traceback the error and eventually reinstall manually the faulty component.
 
 Cape installation can be made using the script that can be found there : https://github.com/kevoreilly/CAPEv2/blob/master/installer/cape2.sh
 ```bash
-sudo chmod a+x cape2.sh
-./cape2.sh base cape | tee cape.log
+cd CAPEv2
+sudo chmod a+x installer/cape2.sh
+# if your current user is not cape
+./installer/cape2.sh base cape| tee cape.log
+# if yout current user is cape
+./installer/cap2.sh base | tee cape.log
 ```
 
 The scripts install various services :
@@ -33,11 +40,12 @@ The recommended way is to use poetry for that.
 ```bash
 ## go to /opt/CAPEv2
 poetry install
+# if you encounter problems related to poetry version conflicts with the lock file, either upgrade/downgrade poetry to match the lock file version or use pip
 ## confirm the creation of a virtual environment
 poetry env list
 ## ouptput should look like this
 capev2-t2x27zRb-py3.10 (Activated)
-## now everytime you use cape, you should do so in the virtual environment
+## now everytime you use cape, you should do so in the virtual environment installed by poetry
 sudo -u cape poetry run <command>
 ```
 
