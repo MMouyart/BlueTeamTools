@@ -32,27 +32,32 @@ The scripts install various services :
 - cape-web.service
 - cape-rooter.service
 
-To enable any service at boot use ```systemctl enable <service>```, to start them use ```systemctl start <service>```.
+The script will enable all those services at boot.
 
-Cape has further dependencies which can either be installed using pip (using requirements.txt that can be found there : https://github.com/kevoreilly/CAPEv2/blob/master/requirements.txt
-
-The recommended way is to use poetry for that.
+If the scripts do not work properly, the best way to fix it is to cut the script and manually run it step by step (requires an understanding of the script).
+If an error message appears regarding suricata and the suricata.service file that cannot be found on the system, do so :
 ```bash
-## go to /opt/CAPEv2
-poetry install
-# if you encounter problems related to poetry version conflicts with the lock file, either upgrade/downgrade poetry to match the lock file version or use pip
-## confirm the creation of a virtual environment
-poetry env list
-## ouptput should look like this
-capev2-t2x27zRb-py3.10 (Activated)
-## now everytime you use cape, you should do so in the virtual environment installed by poetry
-sudo -u cape poetry run <command>
+cat >> /etc/systemd/system/suricata.service <<EOF
+# Sample Suricata systemd unit file.
+[Unit]
+Description=Suricata Intrusion Detection Service
+After=syslog.target network-online.target
+
+[Service]
+# Environment file to pick up $OPTIONS. On Fedora/EL this would be
+# /etc/sysconfig/suricata, or on Debian/Ubuntu, /etc/default/suricata.
+#EnvironmentFile=-/etc/sysconfig/suricata
+#EnvironmentFile=-/etc/default/suricata
+ExecStartPre=/bin/rm -f /var/run/suricata.pid
+ExecStart=/sbin/suricata -c /etc/suricata/suricata.yaml --pidfile /var/run/suricata.pid $OPTIONS
+ExecReload=/bin/kill -USR2 $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+EOF
 ```
-
-Note that only the installation scripts and some utilities like the rooter must be executed with sudo, otherwise the rest must be executed under the cape user.
-
 ## Configuration
-Cape has 6 main configuration files :
+Cape has 6 main configuration files located under /opt/CAPEv2/conf :
 - cuckoo.conf: for configuring general behavior and analysis options.
 - auxiliary.conf: for enabling and configuring auxiliary modules.
 - kvm.conf: for defining the options for your virtualization software (the file has the same name as the machinery module you choose in cuckoo.conf).
@@ -61,92 +66,15 @@ Cape has 6 main configuration files :
 - reporting.conf: for enabling or disabling report formats.
 - routing.conf: for defining the routing of internet connection for the VMs.
 
+The installer script will normally configure those files, but you may want to modify them.
 In order to have cape working, at least cuckoo.conf, auxiliary.conf and kvm.conf must be edited to fir your system.
 In cuckoo.conf do so : 
 - machinery in [cuckoo]: this defines which Machinery module you want CAPE to use to interact with your analysis machines. The value must be the name of the module without extension.
-- ip and port in [resultserver]: defines the local IP address and port that CAPE is going to use to bind the result server to. Make sure this matches the network configuration of your analysis machines, or they won’t be able to return the collected results.
-- connection in [database]: defines how to connect to the internal database. You can use any DBMS supported by SQLAlchemy using a valid Database Urls syntax.
+- ip and port in [resultserver]: defines the local IP address and port that CAPE is going to use to bind the result server to. Make sure this matches the network configuration of your analysis machines, or they won’t be able to return the collected results. By default, the resultserver will listen on 0.0.0.0:8000, meaning that you can access it on the web via localhost.
+- connection in [database]: defines how to connect to the internal database. You can use any DBMS supported by SQLAlchemy using a valid Database Urls syntax. The default value corresponds to the postgresql database with the user and password defined in cape2.sh.
 
-For auxiliary.conf, you can see the default conf file and modify it to add additionnal modules.
-
-For kvm.conf, you must create a section dedicated to each analysis vm you wish to use (by default it has a section for 1 vm, cuckoo1). See the default conf file : https://github.com/kevoreilly/CAPEv2/blob/master/conf/default/kvm.conf.default
-
-To enable routing from your analysis vms, routing must be configured.
-```bash
-## configure ip forwarding
-echo 1 | sudo tee -a /proc/sys/net/ipv4/ip_forward
-sudo syctl -w net.ipv4.ip_forward=1
-## enable networkd
-sudo systemctl stop NetworkManager
-sudo systemctl disable NetworkManager
-sudo systemctl mask NetworkManager
-sudo systemctl unmask systemd-networkd
-sudo systemctl enable systemd-networkd
-sudo systemctl start systemd-networkd
-```
-Next step is to configure netplan (and save it under/etc/netplan/99-manual.yaml).
-In this configuration file you must specify each interface and the routes they should use.
-```yaml
-network:
-    version: 2
-    renderer: networkd
-    ethernets:
-        lo:
-            addresses: [ "127.0.0.1/8", "::1/128", "7.7.7.7/32" ]
-        enx00a0c6000000:
-            dhcp4: no
-            addresses: [ "192.168.1.2/24" ]
-            nameservers:
-                addresses: [ "192.168.1.1" ]
-            routes:
-                - to: default
-                  via: 192.168.1.1
-                - to: 192.168.1.0/24
-                  via: 192.168.1.1
-                  table: 101
-            routing-policy:
-             - from: 192.168.1.0/24
-               table: 101
-```
-
-Apply the changes and check they are effective.
-```bash
-sudo netplan apply
-## check the changes are effective
-ip r show table all
-```
-
-The network must be configured to avoid having all ports open.
-1st step is to allow access to administrative services (i.e. this machine).
-```bash
-# HTTP
-sudo ufw allow in on enp8s0 to 10.23.6.66 port 80 proto tcp
-
-# HTTPS
-sudo ufw allow in on enp8s0 to 10.23.6.66 port 443 proto tcp
-
-# SSH
-sudo ufw allow in on enp8s0 to 10.23.6.66 port 22 proto tcp
-
-# SMB (smbd is enabled by default on desktop versions of Ubuntu)
-sudo ufw allow in on enp8s0 to 10.23.6.66 port 22 proto tcp
-
-# RDP (if xrdp is used on the server)
-sudo ufw allow in on enp8s0 to 10.23.6.66 port 445 proto tcp
-```
-
-Then allow the vm to access the cape result server.
-```bash
-sudo ufw allow in on virbr1 to 192.168.42.1 port 2042 proto tcp
-sudo ufw enable
-```
-
-To manually test the internet conection from your vms.
-```bash
-sudo systemctl stop cape-rooter.service
-sudo python3 router_manager.py -r internet -e --vm-name <vm name> --verbose
-sudo python3 router_manager.py -r internet -d --vm-name <vm name> --verbose
-```
+For kvm.conf, you must create a section dedicated to each analysis vm you wish to use (by default it has a section for 1 vm, cuckoo1). 
+By default this file contains 2 sections for the machines names cape1 and cuckoo1. Modify either one of those to fit your vm configurations.
 
 ## Creation of the guest a.k.a. the analysis vm
 First you need to have an iso file of windows (or any linux distro if you wish to analyse linux based malwares). 
@@ -166,7 +94,7 @@ Additionnaly for windows, you can use a debloat tool to uninstall various useles
 Disable microsoft store by removing the environment variable '%USERPROFILE%\AppData\Local\Microsoft\WindowsApps' from the user PATH.
 Disabling any other service (defender, update, firewall...) can be necessary as well. If the virus real-time protection kicks off and deletes the sample automatically, you can turn it off (https://www.tenforums.com/tutorials/3569-turn-off-real-time-protection-microsoft-defender-antivirus.html).
 
-Now that everything is dine, you can either use this vm pristine and clone it to create analysis vms that can be modified and then deleted, or take a snapshot of this vm to further rollback to it after analysis.
+Now that everything is done, you can either use this pristine vm and clone it to create analysis vms that can be modified and then deleted, or take a snapshot of this vm to further rollback to it after analysis.
 
 If you want to use a linux analysis vm, you should be using an ubuntu one.
 Once the vm is created, install all dependencies and configure the agent to run as root at startup.
@@ -198,4 +126,3 @@ EOF
 
 sudo systemctl stop snapd.service && sudo systemctl mask snapd.service
 ```
-
