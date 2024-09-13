@@ -1,6 +1,7 @@
 Cape is a newer self-hosted sandbox solution based on cuckoo.
 As stated by the documentation, the recommendation for host and guest are Ubuntu 22.04 for host and windows 10 21H2 for guest.
 For ease of use, clone the Cape github repo ```git clone https://github.com/kevoreilly/CAPEv2.git```, therefore, every mentionned script will be available on your system.
+Make sure you have enough resources and RAM in particular, 8GB is not sufficient (although no number is clearly defined as the minimum).
 
 ## Installing all dependencies
 First dependencie to install is KVM. The documentation links to a script which automates the installation process.
@@ -69,18 +70,23 @@ Cape has 6 main configuration files located under /opt/CAPEv2/conf :
 The installer script will normally configure those files, but you may want to modify them.
 In order to have cape working, at least cuckoo.conf, auxiliary.conf and kvm.conf must be edited to fir your system.
 In cuckoo.conf do so : 
-- machinery in [cuckoo]: this defines which Machinery module you want CAPE to use to interact with your analysis machines. The value must be the name of the module without extension.
-- ip and port in [resultserver]: defines the local IP address and port that CAPE is going to use to bind the result server to. Make sure this matches the network configuration of your analysis machines, or they won’t be able to return the collected results. By default, the resultserver will listen on 0.0.0.0:8000, meaning that you can access it on the web via localhost.
+- machinery in [cuckoo]: this defines which Machinery module you want CAPE to use to interact with your analysis machines. Use the value 'kvm' if you used qemu-kvm for virtualisation.
+- ip and port in [resultserver]: defines the local IP address and port that CAPE is going to use to bind the result server to. Make sure this matches the network interface of your virtual machines on which they will give back analysis. If you have multiple machines on different virtual networks use 0.0.0.0:2042.
 - connection in [database]: defines how to connect to the internal database. You can use any DBMS supported by SQLAlchemy using a valid Database Urls syntax. The default value corresponds to the postgresql database with the user and password defined in cape2.sh.
 
 For kvm.conf, you must create a section dedicated to each analysis vm you wish to use (by default it has a section for 1 vm, cuckoo1). 
 By default this file contains 2 sections for the machines names cape1 and cuckoo1. Modify either one of those to fit your vm configurations.
+If you have multiple VMs on multiple virtual networks, for each VM, specify the host gateway ip as the result server, e.g. 2 virtual networks 192.168.55.0/24 and 192.168.122.0/24, for the first machine set 192.168.55.1 as result server and for the 2nd machine set 192.168.122.1 as the result server.
 
 ## Creation of the guest a.k.a. the analysis vm
 First you need to have an iso file of windows (or any linux distro if you wish to analyse linux based malwares). 
 Then create the vm and install python3 on this vm.
 
-For windows machine, it is  required to disable UAC, auto update or check for updates for any software installed.
+Download the agent file https://raw.githubusercontent.com/kevoreilly/CAPEv2/master/agent/agent.py
+Using a command line or a powershell prompt, rename it to avoid having a window popping up (it could mess with cape analysis scripts) ```re agent.py agent.pyw```
+Download the 32-bit python installer (check which version is indicated in the documentation, as of now, 3.10 is fine).
+
+It is  required to disable UAC, auto update (i.e. windows update service), windows defender and windows firewall.
 
 To have the agent running at startup with required privieleges, in windows do so :
 - open task scheduler
@@ -126,3 +132,7 @@ EOF
 
 sudo systemctl stop snapd.service && sudo systemctl mask snapd.service
 ```
+
+Once everything is up and running, make sure every service is running (cpae, cape-rooter, cape-web and cape-processing) and if something is wrong check the logs (using journalctl).
+Once you create an analysis, is the VM does not start automatically (I could not get it done automatically), start it and log on.
+If the analysis fails, check the logs under /opt/CAPEv2/log/.
