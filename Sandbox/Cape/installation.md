@@ -8,9 +8,9 @@ Link to the script : https://github.com/kevoreilly/CAPEv2/blob/master/installer/
 
 In the script, every <WOOT> occurence should be replaced by real hardware pattern which can be found using the command acpidump. Alternatively you can replace all occurences with random characters.
 ```bash
-cd CAPEv2
-sudo chmod a+x installer/kvm-qemu.sh
-sudo ./installer/kvm-qemu.sh all | tee kvm-qemu.log
+wget https://raw.githubusercontent.com/kevoreilly/CAPEv2/master/installer/kvm-qemu.sh
+sudo chmod a+x kvm-qemu.sh
+sudo ./kvm-qemu.sh all | tee kvm-qemu.log
 # if you face an error about needrestart, install the package
 sudo apt-get install needrestart
 ```
@@ -18,12 +18,12 @@ If any error happens when trying to launch KVM or any of its related components,
 
 Cape installation can be made using the script that can be found there : https://github.com/kevoreilly/CAPEv2/blob/master/installer/cape2.sh
 ```bash
-cd CAPEv2
-sudo chmod a+x installer/cape2.sh
+wget https://raw.githubusercontent.com/kevoreilly/CAPEv2/master/installer/cape2.sh
+sudo chmod a+x cape2.sh
 # if your current user is not cape
-./installer/cape2.sh base cape| tee cape.log
+./cape2.sh base cape| tee cape.log
 # if yout current user is cape
-./installer/cap2.sh base | tee cape.log
+./cape2.sh base | tee cape.log
 ```
 
 The scripts install various services :
